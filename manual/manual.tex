@@ -1,0 +1,770 @@
+\documentclass{article}
+\usepackage{amsmath,fullpage,epsfig}
+\parindent 0in
+\begin{document}
+
+\title{\Huge \textbf{OPTRAGEN  2.0} \\ \large \textsl{A MATLAB Toolbox for Optimal Trajectory Generation.}}
+\author{\LARGE Raktim Bhattacharya\\
+\small \texttt{raktim@aero.tamu.edu}\\ \\
+ \textsl{Aerospace Engineering Department,}\\
+ \textsl{Texas A\&M University},\\
+ \textsl{College Station, TX 77843-3141.}} \maketitle
+
+\section{Introduction}
+
+OPTRAGEN is not a medicine :-), but a MATLAB toolbox that numerically solves
+optimal control problems. OPTRAGEN translates optimal control problems of the
+form
+\[ \min_{x ( t ), u ( t )} \Phi_i ( x ( t_0 ), u ( t_0 ), t_0 ) +
+   \int_{t_0}^{t_f} \Phi_t ( x ( t ), u ( t ), t ) d \tau + \Phi_f ( x ( t_f
+   ), u ( t_f ), t_f ) \]
+subject to dynamics
+\[ \dot{x} = f ( x, u, t ) \]
+and constraints
+\[ \begin{array}{cccccc}
+     l_i & \leq & \Psi_i ( x ( t_0 ), u ( t_0 ), t_0 ) & \leq & u_i & (
+     \textit{Initial Constraint})\\
+     l_t & \leq & \Psi_t ( x ( t_{} ), u ( t_{} ), t_{} ) & \leq & u_t & (
+     \textit{Trajectory Constraint} )\\
+     l_f & \leq & \Psi_f ( x ( t_f ), u ( t_f ), t_f ) & \leq & u_f & (
+     \textit{Final Constraint} ),
+   \end{array} \]
+to nonlinear programming problems of the form
+\[ \min_{\rho} F ( \rho ) \]
+subject to
+\[ \begin{array}{ccccc}
+     L & \leq & \left\{ \begin{array}{c}
+       \rho\\
+       A \rho\\
+       G ( \rho )
+     \end{array} \right\} & \leq & U.
+   \end{array} \]
+The transcription of optimal control problem (OCP) to nonlinear
+programming (NLP) problem is done by parameterising trajectories as
+Splines. The output of the transcription is a cost function and a
+constraint function that can be interfaced with any commercially
+available nonlinear programming solver. OPTRAGEN can be considered
+to be a parser that translates optimal control problems to nonlinear
+programming problems, and is \textit{not} dependent on any nonlinear
+programming solver.
+
+\section{Dependencies}
+
+OPTRAGEN requires the following:
+\begin{itemize}
+  \item MATLAB Barebones
+
+  \item MATLAB Symbolic Computing Toolbox
+
+  \item MATLAB Spline Toolbox
+\end{itemize}
+To solve the transcribed nonlinear programming problem, a nonlinear
+programming solver is needed. Recommended solver is SNOPT, since the
+resulting nonlinear programming problem is {\textit{sparse}}.
+Examples provided with this toolbox demonstrates interface with
+SNOPT. A free, student version of SNOPT is available from Philip
+Gill's website at Univ. California, San Diego.
+
+\section{Installation}
+
+  {\textbf{Step 1:}} Unzip it in a desired directory.  Avoid unzipping
+  under directories with space in the name, e.g. \texttt{C:/Program
+  Files/etc}. It will create directory \texttt{optragen/} under the present working
+  directory. Under \texttt{optragen/}, there will be
+  subdirectories:
+  \begin{enumerate}
+    \item \textsf{doc/} : contains documentation
+    \item \texttt{src/} : contains source files for OPTRAGEN
+    \item \texttt{examples/} : contains examples that demonstrate use of this
+    toolbox\\
+  \end{enumerate}
+
+
+  In the \texttt{examples/} directory, there will be directories:
+  \begin{enumerate}
+    \item \texttt{vanderpol/} : fixed final time optimal control problem
+    \item \texttt{brachistochrone/} : open final time optimal control problem
+    \item \texttt{pathplanning/} : obstacle avoidance in 2D\\
+  \end{enumerate}
+
+\textbf{Step 2:} Put \texttt{optragen/src/} in the MATLAB path. \\
+
+\textbf{Step 3:} Put SNOPT in MATLAB path, if you are using SNOPT.
+
+\section{Changes in Version 2}
+The two main changes in this version are:
+\begin{enumerate}
+\item Complete vectorization of code. This has reduced the
+computational time considerably.
+\item Dynamical constraints can now be imposed via Galerkin
+projections. See vanderpol example under
+\texttt{optragen/examples/vanderpol/vanderpol\_galerkin.m}
+\end{enumerate}
+
+\section{Parameterisation of Trajectory Space}
+
+Trajectories in OPTRAGEN are parameterised as Splines. A Spline is
+defined by a set of polynomials that are stitched at predefined
+break points, satisfying a given degree of smoothness. Splines are
+approximating functions of choice for $f ( t )$, when approximation
+is desired over a large interval.\\
+
+
+The large interval $[ t_0, t_f ]$ is subdivided into sufficiently
+small intervals $[ \xi_i, \xi_{i + 1} ]$, with $t_0 = \xi_1 < \cdots
+< \xi_N = t_f.$ The points $\xi_i$ are called \textit{break points}
+or \textit{knot  points}. On each such interval, polynomial of
+relatively low degree can provide a good approximation to $f ( t )$.
+Approximation over smaller intervals offers \textit{local
+support}.\\
+
+The different polynomial pieces can be constructed such that the
+resulting composite function has several continuous derivatives over
+the interval boundaries or the break points. The number of
+continuous derivatives across the breakpoints defines the
+\textit{smoothness} condition of the spline.\\
+
+  \textbf{Remark 1:} The continuity of the resulting curve {\textit{at the break points}} is
+    determined by the smoothness condition.\\
+
+    \textbf{Remark 2:} The continuity of the resulting curve {\textit{in between the break
+      points}} is determined by the order of the polynomial
+      pieces.\\
+
+\begin{figure}[h]
+\centerline{\epsfig{file=spline.pdf,width=3in}} \caption{Splines and
+polynomial pieces.} \label{fig.splines}
+\end{figure}
+
+Figure \ref{fig.splines} shows a spline curve composed of four
+polynomial pieces $P_1, P_2, P_3$ and $P_4$. They are joined at
+break points A,B and C. Splines can be represented in a
+computationally efficient manner using normalised B-Splines. For a
+more information on Splines, the reader is directed to:
+
+  \begin{enumerate}
+    \item {\textit{The MATLAB Spline Toolbox Manual}}
+    \item {\textit{Practical Guide to Splines}}, by Carl de Boor, Springer
+    Verlag Publication.
+  \end{enumerate}
+
+Next we present trajectory parameterisation using B-Splines.
+
+\section{B-Splines }
+  A B-Spline curve is defined as
+  \[ f ( t ) = \sum_{k = 1}^{N_c} \alpha_k B_{k, r} ( t ) \]
+  where
+  \begin{itemize}
+    \item $\alpha_k$ are the free parameters or the degrees of freedom
+
+    \item $N_c$ is the number of free parameters defined by $N_c = N \times (
+    r - s ) + s$
+
+    \item $N$ is the number of intervals or the number of polynomial pieces
+
+    \item $r$ is the degree of the polynomial pieces
+
+    \item $s$ is the smoothness condition at the breakpoints
+
+    \item $B_{k, r} ( t )$ are the basis functions, see MATLAB Spline Toolbox
+    manual for definition
+  \end{itemize}
+
+\begin{figure}[h]
+\centerline{\epsfig{file=Bsplines.pdf,width=3in}} \caption{A
+  Spline curve as a composite of B-Splines.}
+\label{fig.BSplines}
+\end{figure}
+
+Figure \ref{fig.BSplines} shows the same spline as in figure
+  \ref{fig.splines} as a composite of B-Splines.
+
+
+\section{Transcription of Optimal Control Problem to Nonlinear Programming
+Problem}
+
+The transcription is achieved in the following manner:
+\begin{itemize}
+  \item The unknown trajectories are parameterised as B-Splines
+
+  \item The optimisation problem is then written in terms of the B-Spline
+  coefficients $\alpha_k$.
+
+  \item Costs and constraints are evaluated and enforced at the
+  \textit{collocation points}.
+
+  \item The collocation points are {\textit{different}} from the break points.
+  In general, the collocation points are more dense than the break points. The
+  optimal set of collocation points can be determined from the order of the
+  spline using the \textit{Gaussian Quadrature} formula. See MATLAB Spline
+  Toolbox manual, pg 2-45 (example on solving a nonlinear ODE using Splines).
+\end{itemize}
+Figure \ref{fig.transcription} illustrates the transcription process.
+
+\begin{figure}[h]
+\centerline{\epsfig{file=transcription.pdf,width=4in}}
+\caption{Transcription of OCP to NLP.} \label{fig.transcription}
+\end{figure}
+
+\section{Collocation}
+\subsection{Gaussian Quadrature}
+
+  The Gaussian quadrature formula seeks to obtain the best numerical estimate
+  of an integral by picking the optimal abscissae $x_i$ at which to evaluate
+  $f ( x )$. The fundamental theorem of Gaussian quadrature states that the
+  optimal abscissae of the $m$-point Gaussian quadrature formulas are
+  precisely the roots of the orthogonal polynomial for the same interval and
+  weighting function. Gaussian quadrature is optimal because it fits all
+  polynomials up to degree $2 m$ exactly. Slightly less optimal fits are
+  obtained from Radau quadrature and Laguerre quadrature. \\
+
+  If the weighting function is chosen to be $1$ and the interval $[ - 1, 1 ]$,
+  then Legendre polynomials are the orthogonal functions whose roots are the
+  Gaussian sites. A Legendre polynomials of order $r$ is represented by $P_r (
+  x )$. The first few Legendre polynomials are:
+
+\[ \begin{array}{rcl}
+     P_0 ( x ) & = & 1\\
+     P_1 ( x ) & = & x\\
+     P_2 ( x ) & = & \frac{1}{2} ( 3 x^2 - 1 )\\
+     P_3 ( x ) & = & \frac{1}{2} ( 5 x^3 - 3 x )\\
+     P_4 ( x ) & = & \frac{1}{8} ( 35 x^4 - 30 x^2 + 3 )\\
+     P_5 ( x ) & = & \frac{1}{8} ( 63 x^5 - 70 x^3 + 15 x )\\
+     P_6 ( x ) & = & \frac{1}{16} ( 231 x^6 - 315 x^4 + 105 x^2 - 5 )
+   \end{array} \]
+
+\subsection{Chebyshev-Gaussian-Labatto Points}
+
+Chebyshev-Gaussian-Labato (CGL) points can also be used to determine the
+collocation points. CGL points in the interval $[ - 1, 1 ]$ are
+\[ t_k = \cos ( \pi k / N ), k = 0, \ldots, N. \]
+These points are the extreme of the $N^{th}$ order Chebyshev
+polynomial. The $i^{th}$ order Chebyshev polynomial is expressed by
+\[ T_i ( t ) = \cos ( i \cos^{- 1} t ) . \]
+
+\section{Examples}
+\subsection{Vanderpol Oscillator : Fixed Final Time}
+
+Consider the following optimisation problem based on the Vanderpol oscillator.
+\[ \min \int_0^5 ( x_1^2 + x_2^2 + u^2 ) d t \]
+subject to the dynamics
+\[ \begin{array}{rcl}
+     \dot{x}_1 & = & x_2\\
+     \dot{x}_2 & = & - x_1 + ( 1 - x_1 )^2 x_2 + u
+   \end{array} \]
+and constraints
+\[ \begin{array}{rcl}
+     x_1 ( 0 ) & = & 1\\
+     x_2 ( 0 ) & = & 0\\
+     - x_1 ( 5 ) + x_2 ( 5 ) & = & 1
+   \end{array} \]
+The optimisation problem has
+\begin{itemize}
+  \item one trajectory or integral cost function
+
+  \item two initial linear constraints
+
+  \item one final linear constraint
+
+  \item one linear trajectory or path constraint
+
+  \item one nonlinear trajectory or path constraint
+\end{itemize}
+The problem can be formulated as a numerical optimisation problem in more than
+one way, depending on the trajectories that are parameterised.
+
+\subsubsection{Over Parameterisation}
+If we choose to over parameterise the problem by parameterising $x_1 ( t ), y
+( t )$ and $u ( t )$ as B-Splines, then the dynamics of the system should
+constrain the behaviour of these trajectories. Since the constraints are
+satisfied at the collocation points, a sparse distribution of collocation
+points will result in trajectories that does not approximate the Vanderpol
+oscillator system satisfactorily. The optimal distribution is given by the
+Gaussian quadrature formula. Note that this approach will lead to a large
+number of equality constraints. Therefore, the optimisation problem has to
+have a large number of free parameters for feasibility.
+
+\subsubsection{Differential Flatness}
+  The Vanderpol problem can be formulated as an optimisation problem on a
+  single trajectory as compared to three trajectory variables as shown
+  previously. The Vanderpol system exhibits a property called
+  \textit{differential flatness}. Choosing $z ( t ) \equiv x ( t )$ as the
+  flat output we can rewrite the optimisation problem as follows:
+  \[ \min_{z ( t )}  \int^5_0 [ z^2 + \dot{z}^2 + \{ \ddot{z} + z - ( 1 - z^2
+     ) \dot{z} \}^2 ] d t \]
+  subject to constraints
+  \[ \begin{array}{rcl}
+       z ( 0 ) & = & 1\\
+       \dot{z} ( 0 ) & = & 0\\
+       - z ( 5 ) + \dot{z} ( 5 ) & = & 1
+     \end{array} \]
+  In this formulation, the dynamics of the system is implicitly enforced. It
+  gets rid of the unnecessary equality path constraints which are hard to
+  satisfy and may lead to infeasibility for a small number of B-Spline
+  coefficients. Therefore, exploitation of differential flatness helps in
+  reducing the problem complexity in terms of the number of constraints due to
+  system dynamics and the number of trajectories required to define the
+  problem.\\
+
+  Having said so, it is also important to note that formulation with flat
+  outputs may lead to numerically sensitive problems. Typically, when flatness
+  is exploited the state and conrol variables of the system are complicated
+  algebraic functions of the flat outputs. Numerical optimisation with such
+  functions may lead to singularity problems for naively imposed state and
+  control constraints.\\
+
+  Clearly, there is a tradeoff in the choice of formulation. In some cases, it
+  may not be a good idea to exploit flatness even if possible. It may be
+  computationally feasible to over parameterise the system in the formulation.
+  The choice of formulation is problem dependent and it is not possible to
+  rank them in general in terms of computational efficiency, numerical
+  conditioning, etc.
+
+
+\subsubsection{Construction of the Trajectory Space}
+The trajectory space is defined by the number of intervals $n$, the
+smoothness condition $s$ and the order of the polynomial $r$. It is
+important to select these parameters carefully. For the
+differentially flat system we observe that the highest derivative of
+the flat output that appears in the formulation is two, i.e.
+$\ddot{z}$. If it is desired that $\ddot{z}$ is atleast twice
+differentiable, then the smoothness condition for $z ( t )$ should
+be $s = 5$, resulting in $z ( t ) \in C^{s - 1}$. The order of the
+spline $r$ has to be atleast $s$. The number of intervals $n$ and
+the order $r$ can be tuned to make sure that the problem has
+sufficient degrees of freedom. The order of the spline also
+determines the number of collocation points necessary. This is
+determined from the Gaussian quadrature formula.\\
+
+\begin{figure}[h]
+\centerline{\epsfig{file=vanderpol.pdf,width=4in}} \caption{Fixed
+final time optimal control problem.} \label{fig.vanderpol}
+\end{figure}
+
+Figure \ref{fig.vanderpol} shows the optimal solution for $n = 1, s
+= 4$ and $r = 5$. The optimal cost is $2.4751$ and it took 0.172
+seconds to run in a Pentium 4, 2Ghz machine running Windows XP. The
+optimisation environment is MATLAB based. Computational time is
+expected to improve of the same problem is implemented using ANSI C
+programming language.\\
+
+The solution shown in figure \ref{fig.vanderpol} is really the
+suboptimal solution, since optimality has been determined in the
+subspace of $z ( t )$ defined by the choices of $n, s$ and $r$.
+Changing $n, s$ and $r$  will change the suboptimal solution.\\
+
+\textbf{OPTRAGEN Implementation}\\
+The vanderpol example is at
+\texttt{optragen/examples/vanderpol/vanderpol.m}
+
+\subsection{The Classical Brachistochrone Problem : Open Final Time}
+The problem is defined as follows. A bead slides on a frictionless
+wire between two points $A ( x_0, y_0 )$ and $B ( x_f, y_f )$ in a
+constant-gravity field. The bead has an initial velocity $V_0$ at
+point A. What is the shape of the wire that will produce a
+minimum-time path between the two points? For formulation details
+please refer to \textit{Applied Optimal Control: Optimization,
+Estimation and Control} by Arthur E. Bryson, Jr. and Yu-Chi Ho.\\
+
+The problem is defined by the following optimisation problem
+
+\[ \min t_f \]
+such that
+\[ \begin{array}{rcl}
+     \dot{x} & = & V ( y ) \cos ( \theta )\\
+     \dot{y} & = & V ( y ) \sin ( \theta )\\
+     V ( y ) & = & \sqrt{V_0^2 + 2 g y}\\
+     x ( 0 ) & = & 0\\
+     y ( 0 ) & = & 0\\
+     x ( t_f ) & = & x_f\\
+     y ( t_f ) & = & y_f
+   \end{array} \]
+Since the final time is unknown, it has to be a parameter of optimisation.
+Constants are parameterised as splines with $n = 1, s = 0, r = 1.$ The problem
+is then normalised with respect to time. For this we define the normalised
+time to be $\tau = t / t_f$, where $t_f$ is the unknown constant. Time
+derivatives are scaled appropriately as
+\[ \frac{d}{d t} = \frac{1}{t_f} \frac{d}{d \tau} \]
+The problem with normalised time is therefore
+\[ \min t_f \]
+subject to
+\[ \begin{array}{rcl}
+     \frac{d x}{d \tau} & = & t_f V ( y ) \cos ( \theta )\\
+     \frac{d y}{d \tau} & = & t_f V ( y ) \sin ( \theta )\\
+     V ( y ) & = & \sqrt{V_0^2 + 2 g y}\\
+     x ( 0 ) & = & 0\\
+     y ( 0 ) & = & 0\\
+     x ( 1 ) & = & x_f\\
+     y ( 1 ) & = & y_f
+   \end{array} \]
+The problem can be solved by parametersing $\theta ( \tau )$, but
+that will require numerical integration of the dynamics to determine
+$x ( \tau ), y ( \tau )$. Numerical integration in optimisation
+problems tend to be time consuming and inaccurate, especially when
+constraints are defined on the integrated function.\\
+
+For this problem we over parameterise the system and chose $x ( \tau
+), y ( \tau )$ to be the variables of optimisation. The trajectories
+are constrained by the dynamics. Since derivatives of splines are
+easily computable, derivative constraints can be easily implemented.
+
+\begin{figure}[h]
+\centerline{\epsfig{file=brachi.pdf,width=4in}} \caption{Open final
+time optimal control problem.} \label{fig.brachi}
+\end{figure}
+
+Figure \ref{fig.brachi} shows the suboptimal solution of the
+Brachistochrone problem. This is obtained using $n = 3, s = 2, r =
+4$ for $x ( \tau ), y ( \tau )$ and $n = 1, s = 0, r = 1$ for $t_f$.
+The minimum time is 0.3270 and it took 2.266 seconds to compute in a
+MATLAB environment. \\
+
+This problem has an analytical solution. It turns out that the
+minimum time trajectories are cycloids where $\theta ( t )$ is a
+linear function of time. Figure \ref{fig.brachi} shows almost linear
+variation for suboptimal $\theta ( t ) .$ Deviation is due to the
+errors in imposing the dynamics as  constraints. Increasing
+collocation points and number of intervals is expected to bring this
+error down, at the cost of increased computational time.\\
+
+\textbf{OPTRAGEN Implementation} \\
+The Brachistochrone example is at
+\texttt{optragen/examples/brachistochrone/brachi.m}
+
+\subsection{Robot Motion Planning : Obstacle Avoidance}
+In this example we consider motion planning for a robot with obstacles in 2D
+space. Let us assume that it is desired that the robost goes from point $A (
+x_0, y_0 )$ to $B ( x_f, y_f )$ avoiding circular obstacles in the way and
+using minimum energy. This is cast as the following optimisation problem.
+
+
+\[ \min \int_0^1 ( \dot{x}^2 + \dot{y}^2 ) d t \]
+subject to
+\[ \begin{array}{rcl}
+     \dot{x} & = & V \cos \theta\\
+     \dot{y} & = & V \sin \theta\\
+     x ( 0 ) & = & 0\\
+     y ( 0 ) & = & 0\\
+     x ( 1 ) & = & 1.2\\
+     y ( 1 ) & = & 1.6\\
+     ( x ( t ) - 0.4 )^2 + ( y ( t ) - 0.5 )^2 & \geq & 0.1^{}\\
+     ( x ( t ) - 0.8 )^2 + ( y ( t ) - 1.5 )^2 & \geq & 0.1
+   \end{array} \]
+The last two constraints model circular obstacles that must be avoided.
+
+\begin{figure}[h]
+\centerline{\epsfig{file=obstacle.pdf,width=4in}}
+\caption{Suboptimal minimum energy trajectory, with obstacles.}
+\label{fig.obstacle}
+\end{figure}
+
+Figure \ref{fig.obstacle} shows the optimal trajectory generated
+with the obstacles at $( 0.4, 0.5 )$ and $( 0.8, 1.5 )$ and radius
+0.3162. $n = 2, s = 2, r = 3.$ The minimum cost is 5.0232 and it
+took 0.8590 seconds to solve the problem in a MATLAB environment.\\
+
+\textbf{OPTRAGEN Implementation} \\
+  The path planning example is at
+\texttt{optragen/examples/path planning/obstacleAvoidance.m}
+
+\section{User Manual}
+
+\subsection{The \texttt{nlp} Data Structure}
+
+The \texttt{nlp} data structure contains information necessary to
+transcribe the optimal control problem to nonlinear programming
+problem. It has information that is used by the cost and constraint
+function. It should be declared global.\\
+
+\texttt{EXAMPLE clear; \\ clc; \\global nlp;}
+
+\subsection{Defining Trajectories: \texttt{traj(n,s,r)}}
+\texttt{PURPOSE\\
+  Creates a trajectory object.\\
+\\
+  SYNTAX\\
+  T = traj(n,s,r);\\
+\\
+  T = trajectory object returned.\\
+  n = (MATLAB integer) number of intervals.\\
+  s = (MATLAB integer) smoothness condition at the break points.\\
+  r = (MATLAB integer) order of the polynomial.\\
+\\
+  EXAMPLE\\
+  T = traj(5,2,3);}\\
+
+  The above command creates a trajectory object with $5$ polynomials,
+  smoothness condition of $2$ and order $3$.\\
+
+\texttt{SEE ALSO \\
+Vanderpol example. }
+
+\subsection{Derivatives of Trajectories: \texttt{deriv(z)}}
+\texttt{PURPOSE \\
+Creates a trajectory object that is the derivative of another
+trajectory object.\\
+\\
+SYNTAX\\ zd = deriv(z);\\
+\\
+zd = trajectory object containing the derivative of the trajectory
+object z.\\
+\\
+z  = a trajectory object.\\
+\\
+EXAMPLE\\ z = traj(5,2,3);\\ zd = deriv(z);}\\
+
+The above commands create a trajectory object with $5$ polynomial
+pieces, each of order $3$ and smoothness condition $2$. Then it
+creates its derivative \texttt{zd}, which is another object with $5$
+polynomials, of order $2$ and smoothness condition $1$.\\
+
+\texttt{SEE ALSO \\Vanderpol example.}
+
+\subsection{Constraint Function:\texttt{constraint(lb,func,ub,type)}}
+\texttt{PURPOSE \\
+Defines a constraint object.\\
+\\
+SYNTAX\\
+ C1 = constraint(lb,func,ub,type);\\
+ \\
+C1 = constraint object returned.\\
+lb = lower bound, must be scalar.\\
+\\
+func = string expression defining the constraint function in terms
+of trajectory objects and their derivatives.\\
+\\
+ub = upper bound, must be scalar.\\
+type = one of the following strings : 'initial', 'trajectory',
+'final'.\\
+\\
+EXAMPLE\\
+x = traj(3,4,5); xd = deriv(x); \\
+y = traj(3,4,5); yd = deriv(y);\\
+C1 = constraint(0,'xd',0,'initial'); \% Initial constraint}
+\begin{verbatim}
+C2 = constraint(1,'x^2+y^2',Inf,'trajectory'); % Path constraint
+C = C1+C2; % Combine both constraints into a single variable
+
+SEE ALSO
+Brachistochrone example.
+\end{verbatim}
+
+
+\subsection{Cost Function: \texttt{cost(func,type)}}
+\texttt{PURPOSE \\
+Defines a cost object.\\
+\\
+SYNTAX\\
+C = cost(func,type);\\
+\\
+C = constraint object returned.\\
+\\
+func = string expression defining the cost function in terms of
+trajectory objects and their derivatives.\\
+\\
+type = one of the following strings : 'initial', 'trajectory',
+'final'.\\}
+
+\begin{verbatim}
+EXAMPLE
+z = traj(3,4,5); zd = deriv(z); zdd = deriv(zd);
+C1 = cost('z^2+zd^2+zdd^2','trajectory'); % Integral cost
+C2 = cost('zdd+zd','final'); % Terminal cost
+C = C1 + C2; % Combine two costs into a single variable
+\end{verbatim}
+
+In a given problem, there can be only one cost of a given kind. That
+is, there can be only one \texttt{'initial'} cost, only one
+\texttt{'trajectory'} cost and only one \texttt{'final'} cost. These
+can be added together. Cannot add two cost variables of the same
+type.
+
+\begin{verbatim}
+SEE ALSO
+Brachistochrone example.
+\end{verbatim}
+
+
+\subsection{Trajectory List: \texttt{trajList(T1,...,Tn)}}
+
+\texttt{PURPOSE} \\
+\texttt{Defines a list of trajectories. It is used to specify the
+trajectories involved in a given optimisation problem}.\\
+
+\texttt{SYNTAX} \\
+\texttt{TL = trajList(T1,...,Tn);}\\
+
+\texttt{EXAMPLE} \\
+\texttt{TL = trajList(x,xd,xdd,y,yd,z,zd);}\\
+
+\texttt{SEE ALSO} \\
+\texttt{Vanderpol example.);}\\
+
+\subsection{Parameter List}
+
+\texttt{PURPOSE} \\
+\texttt{Defines a MATLAB cell array containing the variable names of parameters such as mass, length, etc,
+that are used in the cost and constraint functions}.\\
+
+\texttt{SYNTAX} \\
+\texttt{P1 = \{varname1,...,varnameN\}\\
+varname1,..., varnameN = MATLAB strings.}\\
+
+\texttt{EXAMPLE} \\
+\texttt{global V0 g;\\
+... \\
+V0 = 1; g = 9.806;\\
+ParamList = \{'V0','g'\} \\
+\\
+The variables used in the parameter list must be declared global and assigned a value.}\\
+
+\texttt{SEE ALSO} \\
+\texttt{Brachistochrone example.}\\
+
+
+\subsection{Transription of OCP to NLP:\\\texttt{ocp2nlp(TrajList, Cost,Constr,
+HL,ParamList,pathName,probName)}}
+
+
+\texttt{PURPOSE \\
+Transcribe the optimal control problem to a nonlinear programming
+problem.\\
+\\
+SYNTAX \\
+nlp = ocp2nlp(TrajList, Cost, Constr, HL, ParamList, pathName,
+probName);\\
+\\
+nlp = data structure containing definition of the resulting NLP.\\
+TrajList = MATLAB object returned by trajList(...).\\
+Cost = MATLAB object that defines the cost functions.\\
+Constraint = MATLAB object that defines the constriant functions.\\
+HL = Horizon length, vector containing the collocation points.Final
+time is taken to be HL(end).\\
+ParamList = Parameter list, cell array of parameter variable
+names.\\
+pathName = MATLAB string containing location where working files are
+created.\\
+probname = MATLAB string used to prefix the names of the working
+files.}
+
+\subsection{Providing Initial Guess}
+
+
+  The nonlinear programming problem is sensitive to the initial guess
+  provided. The solution returned is the locally optimal solution.
+  Computational time also greatly depends on the initial guess provided. Some
+  of the choices are,
+
+\begin{verbatim}
+init = zeros(ncoeff,1); % All zero
+init = ones(ncoeff,1);  % All unity
+init = rand(ncoeff,1);  % Random numbers
+\end{verbatim}
+
+
+It is possible to construct initial coefficients from a trajectory.
+This is shown in the robotic path planning example. In that problem,
+the initial trajectory is assumed to be a straight line from $( x_0,
+y_0 )$ to $( x_f, y_f )$, i.e.
+
+
+\begin{verbatim}
+Time = linspace(0,1,100);
+xval = linspace(x0,xf,100);
+yval = linspace(y0,yf,100);
+\end{verbatim}
+
+
+We then fit splines to the data points with the number of intervals,
+smoothness and order that was used to parameterise $x ( t )$ and $y
+( t )$, i.e.
+
+
+\begin{verbatim}
+xsp = createGuess(x,Time,xval); % x = trajectory object used to parameterise x(t)
+ysp = createGuess(y,Time,yval); % y = trajectory object used to parameterise y(t)
+\end{verbatim}
+
+
+  Variables \texttt{xsp,ysp} are spline objects that fit the data points
+  \texttt{(t,xval)} and \texttt{(t,yval)}. Initial guess is constructed using
+  the command,
+
+
+  \verb¤init = [xsp.coefs ysp.coefs]';¤\\
+
+  The initial guess must be a column vector. The sequence of coefficients
+  corresponds to the trajectories in the trajectory list created using
+  \texttt{trajList(...)}.
+
+
+\subsection{Calling SNOPT}
+
+The user is encouraged to read the SNOPT user manual to tweak the
+solver. The OPTRAGEN examples demonstrate interface with SNOPT. An
+example is as follows.\\
+
+\texttt{EXAMPLE\\
+x = solution of the optimisation problem. These are the coefficients
+of the B-Splines.\\
+\\
+F = Vector containing the cost and constraint functions. F(1) is the
+value of the objective. F(2:end) are the values of the constraint
+functions.\\
+\\
+inform = returns the status of the optimisation problem. See SNOPT
+manual for more information.\\
+\\
+init = initial guess for the problem.\\
+xlow = lower bound on the parameters.\\
+xupp = upper bound on the parameters.\\
+\\
+LB = lower bound of the cost and constraint functions. LB(1) = lower
+bound of the cost function. LB(2:end) = lower bound of the
+constraint functions.\\
+\\
+UB = upper bound of the cost and constraint functions. UB(1) = upper
+bound of the cost function. UB(2:end) = upper bound of the
+constraint functions.\\
+\\
+'ocp2nlp\_cost\_and\_constraint' = MATLAB function that is called by
+the nonlinear solver. This function in turn calls the cost and
+constraint functions defined by the user. The user should not edit
+this file. }
+
+
+\subsection{Plotting Results}
+
+\texttt{PURPOSE \\Construct trajectory from B-Spline coefficients.\\
+\\
+SYNTAX\\ sp = getTrajSplines(nlp,x);\\
+\\
+sp = cell array of spline objects.\\
+nlp = MATLAB object returned by ocp2nlp(...).\\
+x = solution returned by SNOPT or any other solver.\\
+\\
+Sequence of trajectories in sp is the sequence of non-derivative
+trajectories in the trajList(...).\\
+\\
+EXAMPLE\\
+TL = trajList(x,xd,y,yd,ydd,z); \\
+....\\
+\% Call ocp2nlp(...) \\
+\% Call SNOPT(...)\\
+\\
+sp = getTrajSplines(nlp,x); % Sequence of non deriv traj in TL is x,y,z\\
+X = sp{1}; \% x trajectory\\
+Y = sp{2}; \% y trajectory\\
+Z = sp{3}; \% z trajectory\\
+\\
+Derivatives of splines are obtained as\\
+Xd = fnder(X); Yd = fnder(Y); Zd = fnder(Z); \\
+Xd,Yd and Zd are spline objects.\\
+\\
+To plot spline objects use command\\ fnplt(X); fnplt(Y); fnplt(Z);\\
+\\
+To get numerical values at sites TGrid,\\ Xval = fnval(X,TGrid);\\
+\\
+SEE ALSO \\
+MATLAB Spline Toolbox, Vanderpol example. \\}
+\end{document}
