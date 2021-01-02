@@ -52,8 +52,8 @@ end
 argList = [createArgList(OutputSequence)];
 
 Func = sprintf('%s(%s)',funcName,argList);
-fBlock = ''; % Don't make them empty using [], it causes problems
-dfBlock = '';% Don't make them empty using [], it causes problems
+fBlock = 'f = []; '; % Don't make them empty using [], it causes problems
+dfBlock = 'df = []; ';% Don't make them empty using [], it causes problems
 
 funcCount = 1;
 

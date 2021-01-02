@@ -14,8 +14,8 @@ hl = 1.0;
 
 % Create trajectory variables
 % ===========================
-x = traj(ninterv,3,5); % Arguments are ninterv, smoothness, order
-y = traj(ninterv,3,5);
+x = traj(ninterv,4,5); % Arguments are ninterv, smoothness, order
+y = traj(ninterv,4,5);
 tf = traj(1,0,1);
 
 % Create derivatives of trajectory variables
@@ -33,7 +33,7 @@ Constr = constraint(0,'x',0,'initial') + ... % x(0)
     constraint(0.001,'tf',Inf,'initial') + ...   %
     constraint(1,'x',1,'final') + ...     % x(tf)   Final position, time is normalised
     constraint(1,'y',1,'final') + ...     % y(tf)   Final position, time is normalised
-    constraint(0,'(xd^2 + yd^2) - tf^2*(V0^2 + 2*g*y)',0,'galerkin'); % Dynamics as a path constraint
+    constraint(0,'(xd^2 + yd^2) - tf^2*(V0^2 + 2*g*y)',0,'trajectory'); % Dynamics as a path constraint
 
 % Define Cost Function
 % ====================
@@ -59,17 +59,17 @@ TrajList = trajList(x,xd,y,yd,tf);
 
 
 nlp = ocp2nlp(TrajList, Cost,Constr, HL, ParamList,pathName,probName);
-snset('Minimize');
 
 xlow = -Inf*ones(nlp.nIC,1);%xlow(end) = 0.001;
 xupp = Inf*ones(nlp.nIC,1);
 
-init = ones(1,nlp.nIC);
+x0 = ones(1,nlp.nIC)';
 
-tic;
-[x,F,inform] = snopt(init',xlow,xupp,[0;nlp.LinCon.lb;nlp.nlb],[Inf;nlp.LinCon.ub;nlp.nub],'ocp2nlp_cost_and_constraint');
-toc;
-F(1)
+silent = true; % Do not print iteration information from fmincon.
+[x,fval,exitflag,output] = optragenSolve(x0,xlow,xupp,silent);
+
+disp(output.message);
+fprintf(1,'Optimal Cost: %.6f\n', fval);
 
 sp = getTrajSplines(nlp,x);
 xSP = sp{1};
@@ -87,7 +87,6 @@ Yd = fnval(fnder(ySP),refinedTimeGrid);
 th = atan2(Yd,Xd);
 
 TF = fnval(tfSP,refinedTimeGrid);
-
 
 C1 = (Xd.^2 + Yd.^2) - (TF.^2).*(V0^2 + 2*g*Y);
 figure(1); clf;

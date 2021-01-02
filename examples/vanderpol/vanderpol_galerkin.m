@@ -68,14 +68,16 @@ TrajList = trajList(x,xd,xdd,u);
 ParamList = [];
 
 nlp = ocp2nlp(TrajList, Cost,Constr, HL, ParamList,pathName,probName);
-init = linspace(0,10,nlp.nIC);
-snset('Minimize');
+x0 = linspace(0,10,nlp.nIC)';
 xlow = -Inf*ones(nlp.nIC,1);
 xupp = Inf*ones(nlp.nIC,1);
-tic;
-[x,F,inform] = snopt(init',xlow,xupp,[0;nlp.LinCon.lb;nlp.nlb],[Inf;nlp.LinCon.ub;nlp.nub],'ocp2nlp_cost_and_constraint');
-toc;
-F(1)
+
+silent = true; % Do not print iteration information from fmincon.
+[x,fval,exitflag,output] = optragenSolve(x0,xlow,xupp,silent);
+
+disp(output.message);
+fprintf(1,'Optimal Cost: %.6f\n', fval);
+
 sp = getTrajSplines(nlp,x);
 zSP = sp{1};
 zdSP = fnder(zSP);
@@ -90,8 +92,8 @@ u = fnval(uSP,refinedTimeGrid);
 u1 = zdd + z - (1-z.^2).*zd;
 
 figure(1);clf;
-subplot(2,2,1);plot(refinedTimeGrid,z); xlabel('Time');ylabel('x');
-subplot(2,2,2);plot(refinedTimeGrid,zd); xlabel('Time'); ylabel('xd');
-subplot(2,2,3);plot(refinedTimeGrid,zdd); xlabel('Time');ylabel('xdd');
+subplot(2,2,1);plot(refinedTimeGrid,z,'Linewidth',1); xlabel('Time');ylabel('x');
+subplot(2,2,2);plot(refinedTimeGrid,zd,'Linewidth',1); xlabel('Time'); ylabel('xd');
+subplot(2,2,3);plot(refinedTimeGrid,zdd,'Linewidth',1); xlabel('Time');ylabel('xdd');
 subplot(2,2,4);plot(refinedTimeGrid,u,'b',refinedTimeGrid,u1,'r--');xlabel('Time');ylabel('u,u_flat');
 legend([{'Galerkin'},{'Diff Flat'}]); 

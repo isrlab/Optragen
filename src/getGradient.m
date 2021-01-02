@@ -7,12 +7,12 @@
 %   All right reserved.
 % =======================================================================
 function grad = getGradient(func,Tnames)
-func1 = vpa(func,5);
+% func1 = vpa(str2sym(func),5);
 len = length(Tnames);
 for i=1:len   
    var = char(Tnames{i});
    %grad(i) = {char(maple('diff',func,var))}; % with Maple toolbox
-   grad(i) = {char(diff(sym(func),var))}; % with Matlab symbolic toolbox
+   grad(i) = {char(diff(str2sym(func),var))}; % with Matlab symbolic toolbox
 end
 
 
