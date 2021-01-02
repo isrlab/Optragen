@@ -7,9 +7,9 @@ else
     silentStr = 'iter';
 end
 
-options = optimoptions('fmincon', 'Display',silentStr,'Algorithm','interior-point');
-%                                      'SpecifyObjectiveGradient',false, ...
-%                                      'SpecifyConstraintGradient',false);
+options = optimoptions('fmincon', 'Display',silentStr,'Algorithm','interior-point', ...
+                                     'SpecifyObjectiveGradient',true, ...
+                                     'SpecifyConstraintGradient',true);
                                  
 
 % Construct linear inequality constraint

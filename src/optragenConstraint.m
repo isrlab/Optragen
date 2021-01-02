@@ -6,7 +6,7 @@
 %   Texas A&M University.
 %   All right reserved.
 % =======================================================================
-function [F,Feq] = optragenConstraint(x)
+function [F,Feq,gradF,gradFeq] = optragenConstraint(x)
 global nlp;
 
 z = getTrajValues(nlp.B,x);
@@ -94,10 +94,12 @@ Feq = nlConstr(ii);
 F = [nlConstr(jj) - nlp.nub(jj);
      -nlConstr(jj) + nlp.nlb(jj)];
  
-% nlConstrGrad = [InlConstrGrad;TnlConstrGrad;FnlConstrGrad;GnlConstrGrad];
-% 
-% if nargout > 1 
-%     G = full([nlConstrGrad;-nlConstrGrad]);
-% else
-%     G = [];
-% end
+nlConstrGrad = [InlConstrGrad;TnlConstrGrad;FnlConstrGrad;GnlConstrGrad];
+
+if nargout > 2 
+    gradFeq = full(nlConstrGrad(ii,:))';
+    gradF = full([nlConstrGrad(jj,:);-nlConstrGrad(jj,:)])';
+else
+    gradFeq = [];
+    gradF = [];
+end

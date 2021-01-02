@@ -69,8 +69,9 @@ end
 
 ObjGrad = IObjGrad + trajOBJGrad + FObjGrad;
 
-G = [];
 if nargout > 1
     G = full(ObjGrad);
+else
+    G = [];
 end
 
