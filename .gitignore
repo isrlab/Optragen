@@ -36,3 +36,4 @@ examples/vanderpol/vanSim_nlicf.m
 examples/vanderpol/vanSim_nltcf.m
 examples/vanderpol/vanSim_tcf.m
 .DS_Store
+src/optragenConstraint.m~
