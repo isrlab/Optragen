@@ -43,11 +43,6 @@ Cost = cost('tf','final'); % Minimise state and control
 % ===================================================================
 HL = nodesCGL(0,1,10);
 
-% =============================================
-% Use NPSOL to solve the resulting NLPP,
-% right now this is the only supported solver
-% =============================================
-
 % Path where the problem related files will be stored
 % ===================================================
 pathName = './'; % Directory where code is generated.

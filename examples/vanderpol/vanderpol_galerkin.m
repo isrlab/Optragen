@@ -43,11 +43,6 @@ Cost = cost('0.5*(x^2 + xd^2 + u^2)','trajectory'); % Minimise state and control
 % ===================================================================
 HL = nodesCGL(0,5,10);
 
-% =============================================
-% Use NPSOL to solve the resulting NLPP,
-% right now this is the only supported solver
-% =============================================
-
 % Path where the problem related files will be stored
 % ===================================================
 pathName = './'; % Directory where code is generated.

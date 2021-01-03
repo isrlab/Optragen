@@ -42,11 +42,6 @@ Cost = cost('0.5*(z^2 + zd^2 + (zdd + z - (1-z^2)*zd)^2)','trajectory'); % Minim
 % ===================================================================
 HL = nodesCGL(0,5,10);
 
-% =============================================
-% Use NPSOL to solve the resulting NLPP,
-% right now this is the only supported solver
-% =============================================
-
 % Path where the problem related files will be stored
 % ===================================================
 pathName = './'; % Directory where code is generated.

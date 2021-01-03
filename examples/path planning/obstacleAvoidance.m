@@ -16,7 +16,6 @@ x0 = 0; xf = 1.05;
 y0 = 0; yf = 1.75;
 eps = 0.0001;
 
-
 % Create trajectory variables
 % ===========================
 x = traj(ninterv,2,3); % Arguments are ninterv, smoothness, order
@@ -37,6 +36,7 @@ Constr = constraint(x0,'x',x0,'initial') + ... % x(0)
     constraint(yf,'y',yf,'final') + ...     % y(1) = 1
     constraint(0.1,'(x-0.4)^2 + (y-0.5)^2',Inf,'trajectory') + ... % Dynamics as a path constraint
     constraint(0.1,'(x-0.8)^2 + (y-1.5)^2',Inf,'trajectory');
+
 % Define Cost Function
 % ====================
 Cost = cost('xd^2+yd^2','trajectory'); % Minimise energy
